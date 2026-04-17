@@ -2,7 +2,6 @@
 services:
   whatsup-doc:
     image: ghcr.io/mattboston/whatsup-doc:latest
-    build: .
     ports:
       - "3000:3000"
     volumes:

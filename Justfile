@@ -17,18 +17,18 @@ dev: build-frontend
 
 # --- Docker Compose ---
 
-# build and start the container
-up:
-    docker compose up --build -d
+# build image and start the container
+up: build
+    docker compose up -d
 
 # stop the container
 down:
     docker compose down
 
-# rebuild and restart
-restart:
+# rebuild image and restart
+restart: build
     docker compose down
-    docker compose up --build -d
+    docker compose up -d
 
 # tail container logs
 logs:
