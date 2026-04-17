@@ -7,10 +7,6 @@ name: Build and Push Docker Image
 on:
   push:
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE: ghcr.io/${{ github.repository_owner }}/whatsup-doc
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -25,10 +21,11 @@ jobs:
           fetch-depth: 0
 
       - name: Get version
+        id: version
         run: |
           tag=$(git describe --tags --match "v[0-9]*" --abbrev=0 2>/dev/null || echo "dev")
           count=$(git rev-list ${tag}..HEAD --count 2>/dev/null || echo "0")
-          echo "VERSION=${tag}-${count}" >> $GITHUB_ENV
+          echo "value=${tag}-${count}" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -36,8 +33,8 @@ jobs:
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
@@ -46,7 +43,7 @@ jobs:
           context: .
           push: ${{ github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ env.IMAGE }}:${{ env.VERSION }}
-            ${{ env.IMAGE }}:latest
+            ghcr.io/${{ github.repository_owner }}/whatsup-doc:${{ steps.version.outputs.value }}
+            ghcr.io/${{ github.repository_owner }}/whatsup-doc:latest
           build-args: |
-            VERSION=${{ env.VERSION }}
+            VERSION=${{ steps.version.outputs.value }}
