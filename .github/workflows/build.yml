@@ -1,0 +1,52 @@
+# schema: https://json.schemastore.org/github-action
+# yamllint disable rule:line-length
+# yamllint disable rule:truthy
+---
+name: Build and Push Docker Image
+
+on:
+  push:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE: ghcr.io/${{ github.repository_owner }}/whatsup-doc
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        run: |
+          tag=$(git describe --tags --match "v[0-9]*" --abbrev=0 2>/dev/null || echo "dev")
+          count=$(git rev-list ${tag}..HEAD --count 2>/dev/null || echo "0")
+          echo "VERSION=${tag}-${count}" >> $GITHUB_ENV
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.ref == 'refs/heads/main' }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.VERSION }}
+            ${{ env.IMAGE }}:latest
+          build-args: |
+            VERSION=${{ env.VERSION }}
