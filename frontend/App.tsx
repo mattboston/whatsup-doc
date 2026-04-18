@@ -102,7 +102,9 @@ export default function App() {
           <ContainerTable containers={containers} />
         )}
       </main>
-      <footer className="footer">What's Up Doc?</footer>
+      <footer className="footer">
+        <a href="https://github.com/mattboston/whatsup-doc" target="_blank" rel="noopener noreferrer">What's Up Doc?</a>
+      </footer>
     </>
   );
 }
