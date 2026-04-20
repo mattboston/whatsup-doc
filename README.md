@@ -55,6 +55,16 @@ just release   # build and push image to GHCR
 ghcr.io/mattboston/whatsup-doc:latest
 ```
 
+## Screenshots
+
+### Light mode
+
+![What's Up Doc light mode screenshot](images/screenshot-light.png)
+
+### Dark mode
+
+![What's Up Doc dark mode screenshot](images/screenshot-dark.png)
+
 ## License
 
 [GPL-3.0](LICENSE)
