@@ -21,6 +21,8 @@
   --https-text: #047857;
   --tcp-bg: #f1f5f9;
   --tcp-text: #475569;
+  --udp-bg: #fef3c7;
+  --udp-text: #d97706;
   --shadow: 0 4px 20px rgba(109, 40, 217, 0.07), 0 1px 3px rgba(0, 0, 0, 0.04);
   --shadow-hover: 0 8px 32px rgba(109, 40, 217, 0.13), 0 2px 8px rgba(0, 0, 0, 0.06);
   --header-bg: rgba(255, 255, 255, 0.75);
@@ -47,6 +49,8 @@
   --https-text: #3fb950;
   --tcp-bg: rgba(255, 255, 255, 0.06);
   --tcp-text: #8b949e;
+  --udp-bg: rgba(217, 119, 6, 0.15);
+  --udp-text: #f59e0b;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   --shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.6);
   --header-bg: rgba(13, 17, 23, 0.9);
@@ -291,6 +295,11 @@ body {
   color: var(--tcp-text);
 }
 
+.badge.udp {
+  background: var(--udp-bg);
+  color: var(--udp-text);
+}
+
 .badge-proto {
   font-size: 9px;
   font-weight: 700;
@@ -302,6 +311,56 @@ body {
 .badge-port {
   font-size: 13px;
   font-variant-numeric: tabular-nums;
+}
+
+/* ---- Network ---- */
+
+.td-network {
+  white-space: nowrap;
+}
+
+.net-pill {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: lowercase;
+  background: var(--tcp-bg);
+  color: var(--tcp-text);
+}
+
+.net-pill.net-mode-host {
+  background: rgba(139, 92, 246, 0.12);
+  color: var(--accent);
+}
+
+.dark .net-pill.net-mode-host {
+  background: rgba(163, 113, 247, 0.2);
+}
+
+.net-pill.net-mode-none {
+  background: rgba(156, 163, 175, 0.15);
+  color: var(--text-muted);
+}
+
+.net-name {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px 10px;
+}
+
+.no-ports {
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 /* ---- Empty / Error ---- */

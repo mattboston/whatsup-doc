@@ -7,6 +7,8 @@ export function ContainerTable({ containers }: { containers: ContainerInfo[] }) 
         <thead>
           <tr>
             <th>Container</th>
+            <th>Network Mode</th>
+            <th>Network Name</th>
             <th>Ports</th>
           </tr>
         </thead>
@@ -18,6 +20,14 @@ export function ContainerTable({ containers }: { containers: ContainerInfo[] }) 
                   <span className="row-icon">📦</span>
                   <span className="row-name">{container.name}</span>
                 </div>
+              </td>
+              <td className="td-network">
+                <span className={`net-pill net-mode-${container.networkMode}`}>
+                  {container.networkMode}
+                </span>
+              </td>
+              <td className="td-network">
+                <span className="net-name">{container.networkName}</span>
               </td>
               <td className="td-ports">
                 <div className="ports-inner">
@@ -33,6 +43,9 @@ export function ContainerTable({ containers }: { containers: ContainerInfo[] }) 
                     <span className="badge-port">{port}</span>
                   </a>
                 ))}
+                {container.ports.length === 0 && (
+                  <span className="no-ports">—</span>
+                )}
                 </div>
               </td>
             </tr>

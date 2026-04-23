@@ -11,10 +11,12 @@ interface DockerContainer {
   Id: string;
   Names: string[];
   Ports: DockerContainerPort[];
+  HostConfig: { NetworkMode: string };
+  NetworkSettings: { Networks: Record<string, unknown> };
 }
 
 export interface ContainerPort {
-  protocol: "http" | "https" | "tcp";
+  protocol: "http" | "https" | "tcp" | "udp";
   port: string;
   url: string;
 }
@@ -23,6 +25,8 @@ export interface ContainerInfo {
   id: string;
   name: string;
   ports: ContainerPort[];
+  networkMode: string;
+  networkName: string;
 }
 
 async function dockerFetch<T>(path: string): Promise<T> {
@@ -53,32 +57,45 @@ export async function getContainers(): Promise<ContainerInfo[]> {
   const containers = await dockerFetch<DockerContainer[]>("/containers/json");
 
   const results = await Promise.all(
-    containers
-      .map(async (container): Promise<ContainerInfo | null> => {
-        const name = container.Names[0]?.replace(/^\//, "") ?? container.Id.slice(0, 12);
+    containers.map(async (container): Promise<ContainerInfo | null> => {
+      const name = container.Names[0]?.replace(/^\//, "") ?? container.Id.slice(0, 12);
+      const networkMode = container.HostConfig.NetworkMode;
+      const networkName = Object.keys(container.NetworkSettings.Networks)[0] ?? networkMode;
+      const isHost = networkMode === "host";
 
-        const publishedPorts = [
-          ...new Set(
-            container.Ports.filter((p) => p.Type === "tcp" && p.PublicPort).map((p) =>
-              String(p.PublicPort)
-            )
-          ),
-        ];
+      const portKey = (p: DockerContainerPort) =>
+        isHost ? String(p.PrivatePort) : p.PublicPort ? String(p.PublicPort) : null;
 
-        if (publishedPorts.length === 0) return null;
+      const tcpPorts = [...new Set(
+        container.Ports.filter((p) => p.Type === "tcp" && portKey(p)).map((p) => portKey(p)!)
+      )];
 
-        const ports: ContainerPort[] = await Promise.all(
-          publishedPorts.map(async (port) => {
-            const protocol = await detectProtocol(port);
-            const url = protocol === "tcp"
-              ? `http://${HOSTNAME}:${port}`
-              : `${protocol}://${HOSTNAME}:${port}`;
-            return { protocol, port, url };
-          })
-        );
+      const udpPorts = [...new Set(
+        container.Ports.filter((p) => p.Type === "udp" && portKey(p)).map((p) => portKey(p)!)
+      )];
 
-        return { id: container.Id, name, ports };
-      })
+      if (tcpPorts.length === 0 && udpPorts.length === 0 && !isHost) return null;
+
+      const tcpPortInfos: ContainerPort[] = await Promise.all(
+        tcpPorts.map(async (port) => {
+          const protocol = await detectProtocol(port);
+          const url = `${protocol === "tcp" ? "http" : protocol}://${HOSTNAME}:${port}`;
+          return { protocol, port, url };
+        })
+      );
+
+      const udpPortInfos: ContainerPort[] = udpPorts.map((port) => ({
+        protocol: "udp" as const,
+        port,
+        url: `udp://${HOSTNAME}:${port}`,
+      }));
+
+      const ports = [...tcpPortInfos, ...udpPortInfos].sort(
+        (a, b) => Number(a.port) - Number(b.port)
+      );
+
+      return { id: container.Id, name, ports, networkMode, networkName };
+    })
   );
 
   return (results.filter(Boolean) as ContainerInfo[]).sort((a, b) =>

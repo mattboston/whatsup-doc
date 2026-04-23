@@ -7,6 +7,12 @@ export function ContainerCard({ container }: { container: ContainerInfo }) {
         <div className="card-icon">📦</div>
         <div className="card-name">{container.name}</div>
       </div>
+      <div className="card-meta">
+        <span className={`net-pill net-mode-${container.networkMode}`}>
+          {container.networkMode}
+        </span>
+        <span className="net-name">{container.networkName}</span>
+      </div>
       <div className="card-ports">
         {container.ports.map(({ protocol, port, url }) => (
           <a
@@ -20,6 +26,9 @@ export function ContainerCard({ container }: { container: ContainerInfo }) {
             <span className="badge-port">{port}</span>
           </a>
         ))}
+        {container.ports.length === 0 && (
+          <span className="no-ports">No published ports</span>
+        )}
       </div>
     </div>
   );
