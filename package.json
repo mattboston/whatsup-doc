@@ -7,12 +7,12 @@
     "start": "bun src/server.ts"
   },
   "dependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "devDependencies": {
-    "@types/react": "^19.1.0",
-    "@types/react-dom": "^19.1.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "bun-types": "latest"
   }
 }
