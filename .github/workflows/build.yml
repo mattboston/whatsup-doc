@@ -6,6 +6,10 @@ name: Build and Push Docker Image
 
 on:
   push:
+    branches:
+      - main
+    tags:
+      - "v*"
 
 jobs:
   build-and-push:
@@ -23,9 +27,13 @@ jobs:
       - name: Get version
         id: version
         run: |
-          tag=$(git describe --tags --match "v[0-9]*" --abbrev=0 2>/dev/null || echo "dev")
-          count=$(git rev-list ${tag}..HEAD --count 2>/dev/null || echo "0")
-          echo "value=${tag}-${count}" >> $GITHUB_OUTPUT
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            tag=$(git describe --tags --match "v[0-9]*" --abbrev=0 2>/dev/null || echo "dev")
+            count=$(git rev-list ${tag}..HEAD --count 2>/dev/null || echo "0")
+            echo "value=${tag}-${count}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -41,7 +49,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/whatsup-doc:${{ steps.version.outputs.value }}
             ghcr.io/${{ github.repository_owner }}/whatsup-doc:latest
