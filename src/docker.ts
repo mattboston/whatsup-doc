@@ -15,6 +15,12 @@ interface DockerContainer {
   NetworkSettings: { Networks: Record<string, unknown> };
 }
 
+interface DockerContainerInspect {
+  Config: {
+    ExposedPorts?: Record<string, unknown>; // e.g. { "80/tcp": {}, "53/udp": {} }
+  };
+}
+
 export interface ContainerPort {
   protocol: "http" | "https" | "tcp" | "udp";
   port: string;
@@ -66,13 +72,24 @@ export async function getContainers(): Promise<ContainerInfo[]> {
       const portKey = (p: DockerContainerPort) =>
         isHost ? String(p.PrivatePort) : p.PublicPort ? String(p.PublicPort) : null;
 
-      const tcpPorts = [...new Set(
+      let tcpPorts = [...new Set(
         container.Ports.filter((p) => p.Type === "tcp" && portKey(p)).map((p) => portKey(p)!)
       )];
 
-      const udpPorts = [...new Set(
+      let udpPorts = [...new Set(
         container.Ports.filter((p) => p.Type === "udp" && portKey(p)).map((p) => portKey(p)!)
       )];
+
+      // Host-network containers have no port mappings in the list response — fall back
+      // to the inspect endpoint's ExposedPorts which come from EXPOSE / ports: directives.
+      if (isHost && tcpPorts.length === 0 && udpPorts.length === 0) {
+        const inspect = await dockerFetch<DockerContainerInspect>(`/containers/${container.Id}/json`);
+        for (const key of Object.keys(inspect.Config?.ExposedPorts ?? {})) {
+          const [port, proto] = key.split("/");
+          if (proto === "tcp") tcpPorts.push(port);
+          else if (proto === "udp") udpPorts.push(port);
+        }
+      }
 
       if (tcpPorts.length === 0 && udpPorts.length === 0 && !isHost) return null;
 
